@@ -1,4 +1,4 @@
-module golang-blogAPI
+module blogAPI
 
 go 1.21.2
 
