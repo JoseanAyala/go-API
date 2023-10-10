@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	blog "blogAPI/Blog"
+	blog "blogAPI/blog"
 
 	"github.com/gorilla/mux"
 )
