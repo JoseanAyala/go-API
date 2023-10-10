@@ -12,8 +12,8 @@ type blogPost struct {
 	Id int `json:"id"`
 	Title string `json:"title"`
 	Body string `json:"body"`
-	DateCreated string `json:"date_created"`
-	DateModified string `json:"date_modified"`
+	DateCreated string `json:"dateCreated"`
+	DateModified string `json:"dateModified"`
 }
 
 // Gets all blog posts
