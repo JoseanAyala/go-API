@@ -11,11 +11,11 @@ import (
 )
 
 type Article struct {
-	Id           string `json:"id"`
-	Title        string `json:"title"`
-	Body         string `json:"body"`
-	DateCreated  string `json:"dateCreated"`
-	DateModified string `json:"dateModified"`
+	Id          string `json:"id"`
+	Title       string `json:"title"`
+	Body        string `json:"body"`
+	DateCreated string `json:"dateCreated"`
+	DateUpdated string `json:"dateUpdated"`
 }
 
 // Gets all blog posts
@@ -23,6 +23,7 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 	posts, err := db.Query("SELECT * FROM blogPost", reflect.TypeOf(Article{}))
 	if err != nil {
 		handleError(w, err, http.StatusInternalServerError)
+
 		return
 	}
 
@@ -51,7 +52,7 @@ func CreateArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := "INSERT INTO blogPost(title, body, dateCreated, dateModified) VALUES('?', '?', NOW(), NOW())"
+	query := "INSERT INTO blogPost(title, body, dateCreated, dateUpdated) VALUES('?', '?', NOW(), NOW())"
 	args := []interface{}{article.Title, article.Body}
 
 	id, err := db.PrepareAndExecute(query, args)
@@ -76,16 +77,16 @@ func UpdateArticle(w http.ResponseWriter, r *http.Request) {
 	query := "UPDATE blogPost SET "
 
 	if article.Title != "" {
-		query += "title = '?', "
+		query += "title = ?, "
 		args = append(args, article.Title)
 	}
 
 	if article.Body != "" {
-		query += "body = '?', "
+		query += "body = ?, "
 		args = append(args, article.Body)
 	}
 
-	query += " WHERE id = ?"
+	query += "dateUpdated = NOW() WHERE id = ?;"
 	args = append(args, article.Id)
 
 	_, err = db.PrepareAndExecute(query, args)

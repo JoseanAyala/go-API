@@ -45,7 +45,7 @@ func Query(query string, resultType reflect.Type, args ...interface{}) (interfac
 	copy(argSlice, args)
 
 	fmt.Println(query)
-	rows, err := stmt.Query()
+	rows, err := stmt.Query(argSlice)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query: %v", err)
 	}
