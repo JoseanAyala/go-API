@@ -6,24 +6,115 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+
+	"github.com/gorilla/mux"
 )
 
-type blogPost struct {
-	Id int `json:"id"`
-	Title string `json:"title"`
-	Body string `json:"body"`
-	DateCreated string `json:"dateCreated"`
+type Article struct {
+	Id           string `json:"id"`
+	Title        string `json:"title"`
+	Body         string `json:"body"`
+	DateCreated  string `json:"dateCreated"`
 	DateModified string `json:"dateModified"`
 }
 
 // Gets all blog posts
-func GetAllPosts(w http.ResponseWriter, r *http.Request){
-	posts, err := db.Query("SELECT * FROM blogPost", reflect.TypeOf(blogPost{}))
-	if(err != nil){
-		w.WriteHeader(http.StatusInternalServerError)
-		return;
+func GetArticles(w http.ResponseWriter, r *http.Request) {
+	posts, err := db.Query("SELECT * FROM blogPost", reflect.TypeOf(Article{}))
+	if err != nil {
+		handleError(w, err, http.StatusInternalServerError)
+		return
 	}
-	
-	fmt.Println("All Blog Posts Endpoint Hit")
+
 	json.NewEncoder(w).Encode(posts)
+}
+
+func GetArticle(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	query := "SELECT * FROM blogPost WHERE id = " + id
+	articles, err := db.Query(query, reflect.TypeOf(Article{}))
+	if err != nil {
+		handleError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(articles)
+}
+
+func CreateArticle(w http.ResponseWriter, r *http.Request) {
+	var article Article
+	err := json.NewDecoder(r.Body).Decode(&article)
+
+	if err != nil {
+		handleError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	query := "INSERT INTO blogPost(title, body, dateCreated, dateModified) VALUES('?', '?', NOW(), NOW())"
+	args := []interface{}{article.Title, article.Body}
+
+	id, err := db.PrepareAndExecute(query, args)
+	if err != nil {
+		handleError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode([]interface{}{id})
+}
+
+func UpdateArticle(w http.ResponseWriter, r *http.Request) {
+	var article Article
+	err := json.NewDecoder(r.Body).Decode(&article)
+	if err != nil {
+		handleError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	var args []interface{}
+	query := "UPDATE blogPost SET "
+
+	if article.Title != "" {
+		query += "title = '?', "
+		args = append(args, article.Title)
+	}
+
+	if article.Body != "" {
+		query += "body = '?', "
+		args = append(args, article.Body)
+	}
+
+	query += " WHERE id = ?"
+	args = append(args, article.Id)
+
+	_, err = db.PrepareAndExecute(query, args)
+	if err != nil {
+		handleError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func DeleteArticle(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	query := "DELETE FROM blogPost WHERE id = ?"
+	args := []interface{}{id}
+
+	_, err := db.PrepareAndExecute(query, args)
+	if err != nil {
+		handleError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func handleError(w http.ResponseWriter, err error, status int) {
+	fmt.Println(err.Error())
+	json.NewEncoder(w).Encode(err.Error())
+	w.WriteHeader(status)
 }
