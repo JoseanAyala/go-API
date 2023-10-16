@@ -1,4 +1,4 @@
-package app
+package main
 
 import (
 	"app/articleUtil"
@@ -51,6 +51,6 @@ func HandleRequests() {
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
-func Main() {
+func main() {
 	HandleRequests()
 }
