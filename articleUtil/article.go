@@ -2,6 +2,7 @@ package articleUtil
 
 import (
 	"app/dataAccess"
+	"app/types"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,25 +11,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type articles struct {
-	Id          string `json:"id"`
-	Title       string `json:"title"`
-	Body        string `json:"body"`
-	DateCreated string `json:"dateCreated"`
-	DateUpdated string `json:"dateUpdated"`
-}
-
-type IDResponse struct {
-	ID int64 `json:"id"`
-}
-
-type Response struct {
-	Data   interface{} `json:"data"`
-	Status int         `json:"status"`
-}
-
 func handleError(w http.ResponseWriter, err error, status int) {
-	response := Response{err.Error(), status}
+	response := types.Response{Data: err.Error(), Status: status}
 	fmt.Println("Response: ", response)
 	json.NewEncoder(w).Encode(response)
 	w.WriteHeader(status)
@@ -36,7 +20,7 @@ func handleError(w http.ResponseWriter, err error, status int) {
 }
 
 func handleResponse(w http.ResponseWriter, response interface{}, status int) {
-	response = Response{response, status}
+	response = types.Response{Data: response, Status: status}
 
 	fmt.Println("Response: ", response)
 	jsonResponse, err := json.Marshal(response)
@@ -51,7 +35,7 @@ func handleResponse(w http.ResponseWriter, response interface{}, status int) {
 }
 
 func GetArticles(w http.ResponseWriter, r *http.Request) {
-	posts, err := dataAccess.GetMany("SELECT * FROM articles order by dateCreated desc", reflect.TypeOf(articles{}), nil)
+	posts, err := dataAccess.GetMany("SELECT * FROM articles order by dateCreated desc", reflect.TypeOf(types.Articles{}), nil)
 	if err != nil {
 		handleError(w, err, http.StatusInternalServerError)
 		return
@@ -64,7 +48,7 @@ func GetArticleById(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	article, err := dataAccess.GetByID(id, reflect.TypeOf(articles{}))
+	article, err := dataAccess.GetByID(id, reflect.TypeOf(types.Articles{}))
 	if err != nil {
 		handleError(w, err, http.StatusInternalServerError)
 		return
@@ -74,7 +58,7 @@ func GetArticleById(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateArticle(w http.ResponseWriter, r *http.Request) {
-	var article articles
+	var article types.Articles
 	err := json.NewDecoder(r.Body).Decode(&article)
 
 	if err != nil {
@@ -91,14 +75,14 @@ func CreateArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handleResponse(w, IDResponse{ID: id}, http.StatusCreated)
+	handleResponse(w, types.IDResponse{ID: id}, http.StatusCreated)
 }
 
 func UpdateArticle(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	var article articles
+	var article types.Articles
 	err := json.NewDecoder(r.Body).Decode(&article)
 	if err != nil {
 		handleError(w, err, http.StatusBadRequest)

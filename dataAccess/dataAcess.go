@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -32,7 +33,7 @@ func GetByID(id string, resultType reflect.Type) (interface{}, error) {
 	defer db.Close()
 
 	// Prepare the SQL query
-	query := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", resultType.Name())
+	query := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", strings.ToLower(resultType.Name()))
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to prepare query: %v", err)
@@ -119,7 +120,7 @@ func GetMany(query string, resultType reflect.Type, args ...interface{}) (interf
 
 func UpdateById(obj interface{}, id string) error {
 	var args []interface{}
-	interfaceName := reflect.TypeOf(obj).Name()
+	interfaceName := strings.ToLower(reflect.TypeOf(obj).Name())
 	query := fmt.Sprintf("UPDATE %s SET ", interfaceName)
 
 	interfaceValue := reflect.ValueOf(obj)
