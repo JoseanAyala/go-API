@@ -1,7 +1,7 @@
-package api
+package app
 
 import (
-	"api/articleUtil"
+	"app/articleUtil"
 	"fmt"
 	"log"
 	"net/http"

@@ -22,3 +22,5 @@ go.work
 
 # Ignore .env file containing credentials, passwords, and other sensitive information.
 .env
+
+.DS_Store
