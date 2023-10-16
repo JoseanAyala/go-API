@@ -29,7 +29,7 @@ type Response struct {
 
 func handleError(w http.ResponseWriter, err error, status int) {
 	response := Response{err.Error(), status}
-	fmt.Println(err.Error())
+	fmt.Println("Response: ", response)
 	json.NewEncoder(w).Encode(response)
 	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
@@ -37,7 +37,8 @@ func handleError(w http.ResponseWriter, err error, status int) {
 
 func handleResponse(w http.ResponseWriter, response interface{}, status int) {
 	response = Response{response, status}
-	fmt.Println(response)
+
+	fmt.Println("Response: ", response)
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
 		handleError(w, err, http.StatusInternalServerError)

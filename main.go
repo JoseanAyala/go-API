@@ -11,6 +11,7 @@ import (
 )
 
 func HomePage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprintf(w, "<h1>Welcome to my API</h1>")
 	fmt.Fprintf(w, "<p>This is a RESTful API built with Go and Gorilla Mux.</p>")
 	fmt.Fprintf(w, "<p>Endpoints:</p>")
@@ -33,6 +34,7 @@ func HandleRequests() {
 			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 			w.Header().Set("Content-Type", "application/json")
 
+			fmt.Printf("%s %s\n", r.Method, r.URL.Path)
 			next.ServeHTTP(w, r)
 		})
 	})
