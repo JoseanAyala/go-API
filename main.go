@@ -10,18 +10,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func HomePage(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	fmt.Fprintf(w, "<h1>Welcome to my API</h1>")
-	fmt.Fprintf(w, "<p>This is a RESTful API built with Go and Gorilla Mux.</p>")
-	fmt.Fprintf(w, "<p>Endpoints:</p>")
-	fmt.Fprintf(w, "<ul>")
-	fmt.Fprintf(w, "<li>GET /articles - Get all articles</li>")
-	fmt.Fprintf(w, "<li>GET /articles/{id} - Get an article by ID</li>")
-	fmt.Fprintf(w, "<li>POST /articles - Create a new article</li>")
-	fmt.Fprintf(w, "<li>PUT /articles/{id} - Update an article by ID</li>")
-	fmt.Fprintf(w, "<li>DELETE /articles/{id} - Delete an article by ID</li>")
-	fmt.Fprintf(w, "</ul>")
+func main() {
+	HandleRequests()
 }
 
 func HandleRequests() {
@@ -53,6 +43,7 @@ func HandleRequests() {
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
-func main() {
-	HandleRequests()
+func HomePage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprintf(w, "<html><head><title>Welcome to my API</title><style>body{background-color:#1a1a1a;color:#fff}h1,p,li{color:#fff}</style></head><body><h1>Welcome to my API</h1><p>This is a RESTful API built with Go and Gorilla Mux.</p><p>Endpoints:</p><ul><li>GET /articles - Get all articles</li><li>GET /articles/{id} - Get an article by ID</li><li>POST /articles - Create a new article</li><li>PUT /articles/{id} - Update an article by ID</li><li>DELETE /articles/{id} - Delete an article by ID</li></ul></body></html>")
 }
