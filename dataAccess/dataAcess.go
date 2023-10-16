@@ -12,10 +12,7 @@ import (
 
 func getDB() (*sql.DB, error) {
 	// Load connection string from .env file
-	err := godotenv.Load()
-	if err != nil {
-		return nil, fmt.Errorf("failed to load env: %v", err)
-	}
+	godotenv.Load()
 
 	// Open a connection to db
 	db, err := sql.Open("mysql", os.Getenv("DSN"))
