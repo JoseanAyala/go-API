@@ -2,45 +2,84 @@ package main
 
 import (
 	"app/articleUtil"
+	"app/middleware"
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
+	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
+	"github.com/auth0/go-jwt-middleware/v2/validator"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	HandleRequests()
-}
+	// Load .env file, don't throw an error if it doesn't exist
+	godotenv.Load()
 
-func HandleRequests() {
-	router := mux.NewRouter().StrictSlash(true)
+	router := createRouter()
 
-	router.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Methods", "POST,GET,PUT,DELETE")
-			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-			w.Header().Set("Content-Type", "application/json")
-
-			fmt.Printf("%s %s\n", r.Method, r.URL.Path)
-			next.ServeHTTP(w, r)
-		})
+	okOrigins := handlers.AllowedOrigins([]string{"http://localhost:5173"})
+	allowCredentails := handlers.AllowCredentials()
+	okMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
+	okHeaders := handlers.AllowedHeaders([]string{
+		"Accept",
+		"Accept-Encoding",
+		"Authorization",
+		"Cache-Control",
+		"Content-Length",
+		"Content-Type",
+		"Cookie",
+		"Host",
+		"Origin",
+		"Pragma",
+		"Referer",
+		"User-Agent",
 	})
 
-	router.HandleFunc("/", HomePage).Methods("GET")
-	router.HandleFunc("/articles", articleUtil.GetArticles).Methods("GET")
-	router.HandleFunc("/articles/{id}", articleUtil.GetArticleById).Methods("GET")
-	router.HandleFunc("/articles", articleUtil.CreateArticle).Methods("POST")
-	router.HandleFunc("/articles/{id}", articleUtil.DeleteArticle).Methods("DELETE")
-	router.HandleFunc("/articles/{id}", articleUtil.UpdateArticle).Methods("PUT")
+	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(okOrigins, allowCredentails, okMethods, okHeaders)(router)))
+}
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	log.Fatal(http.ListenAndServe(":"+port, router))
+func createRouter() *mux.Router {
+	r := mux.NewRouter().StrictSlash(true)
+	r.Use(middleware.LogRequests)
+	r.HandleFunc("/", HomePage).Methods("GET")
+	r.HandleFunc("/articles", articleUtil.GetArticles).Methods("GET")
+	r.HandleFunc("/articles/{id}", articleUtil.GetArticleById).Methods("GET")
+	r.HandleFunc("/articles", articleUtil.CreateArticle).Methods("POST")
+	r.HandleFunc("/articles/{id}", articleUtil.DeleteArticle).Methods("DELETE")
+	r.HandleFunc("/articles/{id}", articleUtil.UpdateArticle).Methods("PUT")
+
+	// This route is only accessible if the user has a
+	// valid access_token with the read:messages scope.
+	r.Handle("/api/private-scoped", middleware.EnsureValidToken()(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			token := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
+
+			claims := token.CustomClaims.(*middleware.CustomClaims)
+			if !claims.HasScope("read:messages") {
+				w.WriteHeader(http.StatusForbidden)
+				w.Write([]byte(`{"message":"Insufficient scope."}`))
+				return
+			}
+
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"message":"Hello from a private endpoint! You need to be authenticated to see this."}`))
+		}),
+	))
+
+	// This route is only accessible if the user has a valid access_token.
+	r.Handle("/private", middleware.EnsureValidToken()(
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"message":"Hello from a private endpoint! You need to be authenticated to see this."}`))
+		}),
+	)).Methods("GET")
+
+	return r
 }
 
 func HomePage(w http.ResponseWriter, r *http.Request) {
