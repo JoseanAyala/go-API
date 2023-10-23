@@ -12,16 +12,13 @@ import (
 )
 
 func handleError(w http.ResponseWriter, err error, status int) {
-	response := types.Response{Data: err.Error(), Status: status}
-	fmt.Println("Response: ", response)
-	json.NewEncoder(w).Encode(response)
+	fmt.Println("Response: ", err.Error())
+	json.NewEncoder(w).Encode(err.Error())
 	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
 }
 
 func handleResponse(w http.ResponseWriter, response interface{}, status int) {
-	response = types.Response{Data: response, Status: status}
-
 	fmt.Println("Response: ", response)
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
@@ -66,8 +63,8 @@ func CreateArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	query := "INSERT INTO articles(title, body, dateCreated, dateUpdated) VALUES(?, ?, NOW(), NOW())"
-	args := []interface{}{article.Title, article.Body}
+	query := "INSERT INTO articles(title, body, description, dateCreated, dateUpdated) VALUES(?, ?, ?, NOW(), NOW())"
+	args := []interface{}{article.Title, article.Body, article.Description}
 
 	id, err := dataAccess.PrepareAndExecute(query, args)
 	if err != nil {

@@ -6,13 +6,9 @@ type Articles struct {
 	Body        string `json:"body"`
 	DateCreated string `json:"dateCreated"`
 	DateUpdated string `json:"dateUpdated"`
+	Description string `json:"description"`
 }
 
 type IDResponse struct {
 	ID int64 `json:"id"`
-}
-
-type Response struct {
-	Data   interface{} `json:"data"`
-	Status int         `json:"status"`
 }

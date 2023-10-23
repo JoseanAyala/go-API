@@ -20,7 +20,7 @@ func main() {
 
 	router := createRouter()
 
-	okOrigins := handlers.AllowedOrigins([]string{"http://localhost:5173"})
+	okOrigins := handlers.AllowedOrigins([]string{"http://localhost:5173, https://joseanayala.vercel.app"})
 	allowCredentails := handlers.AllowCredentials()
 	okMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 	okHeaders := handlers.AllowedHeaders([]string{
@@ -44,12 +44,26 @@ func main() {
 func createRouter() *mux.Router {
 	r := mux.NewRouter().StrictSlash(true)
 	r.Use(middleware.LogRequests)
+
 	r.HandleFunc("/", HomePage).Methods("GET")
 	r.HandleFunc("/articles", articleUtil.GetArticles).Methods("GET")
 	r.HandleFunc("/articles/{id}", articleUtil.GetArticleById).Methods("GET")
-	r.HandleFunc("/articles", articleUtil.CreateArticle).Methods("POST")
-	r.HandleFunc("/articles/{id}", articleUtil.DeleteArticle).Methods("DELETE")
-	r.HandleFunc("/articles/{id}", articleUtil.UpdateArticle).Methods("PUT")
+
+	r.Handle("/articles",
+		middleware.EnsureValidToken()(http.HandlerFunc(articleUtil.GetArticles))).
+		Methods("POST")
+
+	r.Handle("/articles/{id}",
+		middleware.EnsureValidToken()(http.HandlerFunc(articleUtil.DeleteArticle))).
+		Methods("DELETE")
+
+	r.Handle("/articles/{id}",
+		middleware.EnsureValidToken()(http.HandlerFunc(articleUtil.UpdateArticle))).
+		Methods("PUT")
+
+	//r.HandleFunc("/articles", articleUtil.CreateArticle).Methods("POST")
+	//r.HandleFunc("/articles/{id}", articleUtil.DeleteArticle).Methods("DELETE")
+	//r.HandleFunc("/articles/{id}", articleUtil.UpdateArticle).Methods("PUT")
 
 	// This route is only accessible if the user has a
 	// valid access_token with the read:messages scope.
@@ -69,15 +83,6 @@ func createRouter() *mux.Router {
 			w.Write([]byte(`{"message":"Hello from a private endpoint! You need to be authenticated to see this."}`))
 		}),
 	))
-
-	// This route is only accessible if the user has a valid access_token.
-	r.Handle("/private", middleware.EnsureValidToken()(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"message":"Hello from a private endpoint! You need to be authenticated to see this."}`))
-		}),
-	)).Methods("GET")
 
 	return r
 }
