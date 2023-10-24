@@ -48,7 +48,7 @@ func createRouter() *mux.Router {
 	r.HandleFunc("/articles/{id}", articleUtil.GetArticleById).Methods("GET")
 
 	r.Handle("/articles/create",
-		middleware.EnsureValidToken()(http.HandlerFunc(articleUtil.GetArticles))).
+		middleware.EnsureValidToken()(http.HandlerFunc(articleUtil.CreateArticle))).
 		Methods("POST")
 
 	r.Handle("/articles/delete/{id}",
