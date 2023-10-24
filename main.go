@@ -7,8 +7,6 @@ import (
 	"log"
 	"net/http"
 
-	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
-	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -49,40 +47,17 @@ func createRouter() *mux.Router {
 	r.HandleFunc("/articles", articleUtil.GetArticles).Methods("GET")
 	r.HandleFunc("/articles/{id}", articleUtil.GetArticleById).Methods("GET")
 
-	r.Handle("/articles",
+	r.Handle("/articles/create",
 		middleware.EnsureValidToken()(http.HandlerFunc(articleUtil.GetArticles))).
 		Methods("POST")
 
-	r.Handle("/articles/{id}",
+	r.Handle("/articles/delete/{id}",
 		middleware.EnsureValidToken()(http.HandlerFunc(articleUtil.DeleteArticle))).
 		Methods("DELETE")
 
-	r.Handle("/articles/{id}",
+	r.Handle("/articles/edit/{id}",
 		middleware.EnsureValidToken()(http.HandlerFunc(articleUtil.UpdateArticle))).
 		Methods("PUT")
-
-	//r.HandleFunc("/articles", articleUtil.CreateArticle).Methods("POST")
-	//r.HandleFunc("/articles/{id}", articleUtil.DeleteArticle).Methods("DELETE")
-	//r.HandleFunc("/articles/{id}", articleUtil.UpdateArticle).Methods("PUT")
-
-	// This route is only accessible if the user has a
-	// valid access_token with the read:messages scope.
-	r.Handle("/api/private-scoped", middleware.EnsureValidToken()(
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-			token := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
-
-			claims := token.CustomClaims.(*middleware.CustomClaims)
-			if !claims.HasScope("read:messages") {
-				w.WriteHeader(http.StatusForbidden)
-				w.Write([]byte(`{"message":"Insufficient scope."}`))
-				return
-			}
-
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"message":"Hello from a private endpoint! You need to be authenticated to see this."}`))
-		}),
-	))
 
 	return r
 }
