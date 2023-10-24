@@ -20,7 +20,7 @@ func main() {
 
 	router := createRouter()
 
-	okOrigins := handlers.AllowedOrigins([]string{"http://localhost:5173, https://joseanayala.vercel.app"})
+	okOrigins := handlers.AllowedOrigins([]string{"http://localhost:5173", "https://joseanayala.vercel.app"})
 	allowCredentails := handlers.AllowCredentials()
 	okMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE"})
 	okHeaders := handlers.AllowedHeaders([]string{
